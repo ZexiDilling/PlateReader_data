@@ -113,6 +113,7 @@ def read_temp_list_file(temp_file_name, config):
     else:
         return None
 
+
 def folder_to_files(folder_path):
     """
     Gets a list of all files in a folder and its subfolders
@@ -132,6 +133,54 @@ def folder_to_files(folder_path):
             file_list.append(os.path.join(root, file))
 
     return file_list
+
+
+def txt_to_xlsx(file):
+
+    # get file name from the "file-path".
+    file_name = file.split(".")[0]
+    # setup the excel sheet:
+    wb = Workbook()
+    ws = wb.active
+
+    col = 1
+    row = 1
+
+    file = open(file, "r")
+    lines = file.readlines()
+
+    for row_index, line in enumerate(lines):
+        line = line.removesuffix("\n")
+        line = line.strip()
+        line = " ".join(line.split())
+        line = line.split(" ")
+        col_index_1 = 0
+        for values in line:
+            values = values.split("\t")
+            for col_index_2, value in enumerate(values):
+                ws.cell(column=col + col_index_1 + col_index_2, row=row + row_index, value=value)
+            col_index_1 += 1
+
+    file_name = f"{file_name}.xlsx"
+    wb.save(file_name)
+
+    return file_name
+
+
+def row_col_to_cell(row, col):
+    col_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
+                 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+                 "U", "V", "W", "X", "Y", "Z"]
+    col -= 1
+    if col < len(col_names):
+        cell_name = f"{col_names[col]}{row}"
+    else:
+        stacking_letter = floor(col/len(col_names))
+        temp_col = col - (len(col_names) * stacking_letter )
+        stacking_letter -= 1
+        cell_name = f"{col_names[stacking_letter]}{col_names[temp_col]}{row}"
+    return cell_name
+
 
 if __name__ == "__main__":
     import configparser
