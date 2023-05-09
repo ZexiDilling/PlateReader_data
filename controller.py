@@ -6,8 +6,8 @@ import time
 from datetime import date
 
 from gui import main_layout, popup_email_list_controller, popup_settings_controller
-from helper_func import config_writer, config_header_to_list, clear_file
-from e_mail import listening_controller, mail_report_sender, mail_estimated_time
+from helper_func import config_writer, config_header_to_list, clear_file, plate_dict_reader
+from e_mail import listening_controller, mail_report_sender
 
 
 def main(config):
@@ -19,8 +19,10 @@ def main(config):
     :type config: configparser.ConfigParser
     :return:
     """
+    plate_file = config["Temp_files"]["plate_layouts"]
+    plate_list, archive_plates_dict = plate_dict_reader(plate_file)
 
-    window = main_layout()
+    window = main_layout(plate_list)
 
     while True:
 
@@ -54,7 +56,12 @@ def main(config):
                 data_dict = {sub_heading: folder_out}
                 config_writer(config, config_heading, data_dict)
 
-            threading.Thread(target=listening_controller, args=(config, True, window,), daemon=True).start()
+            plate_layout = archive_plates_dict[values["-BIO_PLATE_LAYOUT-"]]
+            analysis = values["-ANALYSIS_METHOD-"]
+            bio_sample_dict = None
+
+            threading.Thread(target=listening_controller, args=(config, True, window, plate_layout, analysis,
+                                                                bio_sample_dict,), daemon=True).start()
             threading.Thread(target=progressbar, args=(config, True, window,), daemon=True).start()
 
         if event == "-KILL_BUTTON-":
@@ -146,29 +153,6 @@ def progressbar(config, run, window):
             runner = "neg"
             # This is a setup to send a E-mail with a full report over all failed wells.
             # It is set up for time.
-            if window["-E_MAIL_REPORT-"].get():
-                try:
-                    last_e_mail_time = float(window["-TIME_TEXT-"].get())
-                except ValueError:
-                    last_e_mail_time = time.time()
-
-                if current_time - last_e_mail_time > time_limit_no_plate_counter and window["-E_MAIL_REPORT-"].get():
-                    mail_report_sender(temp_file_name, window, config)
-                    window["-E_MAIL_REPORT-"].update(value=False)
-
-            if window["-SEND_E_MAIL-"].get():
-                if current_time - last_e_mail_time > time_limit_plate_counter and window["-E_MAIL_REPORT-"].get():
-                    mail_report_sender(temp_file_name, window, config)
-                    window["-E_MAIL_REPORT-"].update(value=False)
-
-            if total_plates >= int(config["Plate_setup"]["limit"]):
-                current_plate = int(window["-PLATE_COUNTER-"].get())
-
-                if current_plate in procent_splitter:
-                    if current_plate not in time_estimates_send:
-                        time_estimates_send.append(current_plate)
-                        elapsed_time = current_time - float(window["-INIT_TIME_TEXT-"].get())
-                        mail_estimated_time(config, total_plates, current_plate, elapsed_time)
 
         if runner == "pos":
             counter += 10

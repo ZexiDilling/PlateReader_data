@@ -20,13 +20,14 @@ def _menu():
     return layout
 
 
-def _gui_main_layout():
+def _gui_main_layout(plate_list):
     """
     The main layout for the gui
     :return: The main layout for the gui
     :rtype: list
     """
     tool_tip_plate_number = "This is the amount of Destination plates for the transfer"
+    analyse_method = ["None"]
 
     main = sg.Frame("Listening", [[
         sg.Column([
@@ -37,7 +38,9 @@ def _gui_main_layout():
                        tooltip="stops the program that listen to the folder for files"),
              sg.Button("Close", key="-CLOSE-", expand_x=True,
                        tooltip="Closes the whole program")],
-            [sg.Text("Plates:"),
+            [sg.DropDown(sorted(plate_list), default_value=plate_list[0], key="-BIO_PLATE_LAYOUT-", size=7),
+             sg.DropDown(sorted(analyse_method), default_value=analyse_method[0], key="-ANALYSIS_METHOD-", size=7),
+             sg.Text("Plates:"),
              sg.Input("", key="-PLATE_NUMBER-", size=3,
                       tooltip=tool_tip_plate_number),
              sg.Text("Counter", key="-PLATE_COUNTER-", visible=True, tooltip="Plate analysed"),
@@ -54,13 +57,12 @@ def _gui_main_layout():
              sg.Checkbox("Send E-mail", visible=False, key="-SEND_E_MAIL-")]
         ])
     ]])
-
     layout = [[main]]
 
     return layout
 
 
-def main_layout():
+def main_layout(plate_list):
     """
     The main setup for the layout for the gui
     :return: The setup and layout for the gui
@@ -72,7 +74,7 @@ def main_layout():
 
     layout = [[
         top_menu,
-        _gui_main_layout()
+        _gui_main_layout(plate_list)
     ]]
 
     return sg.Window("Echo Data", layout, finalize=True, resizable=True)

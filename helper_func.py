@@ -1,4 +1,6 @@
 import os
+import json
+from math import floor
 
 
 def config_writer(config, heading, data_dict):
@@ -181,6 +183,44 @@ def row_col_to_cell(row, col):
         cell_name = f"{col_names[stacking_letter]}{col_names[temp_col]}{row}"
     return cell_name
 
+
+def plate_dict_reader(plate_file):
+    """
+    Gets data from a CSV file and turns it into a dict that can be used to draw a plate-layout
+
+    :param plate_file: The file name
+    :type plate_file: str
+    :return:
+        - plate_list: A list of all the layouts
+        - archive_plates: A dict for the well state in each layout
+    :rtype:
+        - list
+        - dict
+    """
+
+    try:
+        with open(plate_file) as f:
+            data = f.read()
+    except TypeError:
+        return [], {}
+
+    if data:
+        js = json.loads(data)
+        plate_list = []
+        archive_plates = {}
+        for plate in js:
+            plate_list.append(plate)
+            archive_plates[plate] = {}
+            for headlines in js[plate]:
+                if headlines == "well_layout":
+                    archive_plates[plate][headlines] = {}
+                    for keys in js[plate][headlines]:
+                        temp_key = int(keys)
+                        archive_plates[plate][headlines][temp_key] = js[plate][headlines][keys]
+                elif headlines == "plate_type":
+                    archive_plates[plate][headlines] = js[plate][headlines]
+
+        return plate_list, archive_plates
 
 if __name__ == "__main__":
     import configparser
