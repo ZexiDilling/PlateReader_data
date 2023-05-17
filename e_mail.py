@@ -26,6 +26,7 @@ class MyEventHandler(FileSystemEventHandler):
         self.plate_layout = plate_layout
         self.analysis = analysis
         self.bio_sample_dict = bio_sample_dict
+        self.initial_plate = ""
 
     def on_created(self, event):
         """
@@ -43,12 +44,11 @@ class MyEventHandler(FileSystemEventHandler):
 
                 current_plate = int(self.window["-PLATE_COUNTER-"].get()) + 1
                 if current_plate == 1:
-                    initial_plate = plate_name
-                    print(initial_plate)
+                    self.initial_plate = plate_name
                 while sending_mail:
                     # Set timer to sleep while spark is finishing writing data to the files
                     time.sleep(2)
-                    _, all_plates_data, excel_file = bio_single_report(self.config, temp_file, self.plate_layout, self.analysis, self.bio_sample_dict,
+                    _, all_plates_data, excel_file = bio_single_report(self.config, temp_file, plate_name, self.plate_layout, self.analysis, self.bio_sample_dict,
                                       self.all_plate_data)
 
                     msg_subject = f"Reading for plate {temp_file}"
@@ -64,11 +64,13 @@ class MyEventHandler(FileSystemEventHandler):
                     if current_plate == int(self.window["-PLATE_NUMBER-"].get()):
                         output_folder = self.config["Folder"]["out"]
                         current_date = datetime.now()
-                        output_name = f"full_report_for_{initial_plate}_to_{plate_name}_{current_date}"
+                        current_date = current_date.strftime("%d_%m_%Y")
+                        output_name = f"full_report_for_{self.initial_plate}_to_{plate_name}_on_{current_date}"
                         output_file = f"{output_folder}/{output_name}.xlsx"
+                        time.sleep(1)
                         bio_full_report(output_file, self.analysis, all_plates_data)
-                        # mail_report_sender(temp_file_name, self.window, self.config)
-                        # self.window["-E_MAIL_REPORT-"].update(value=False)
+                        mail_report_sender(output_file, self.window, self.config)
+                        self.window["-E_MAIL_REPORT-"].update(value=False)
 
         else:
             print(event.src_path)

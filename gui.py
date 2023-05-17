@@ -38,8 +38,12 @@ def _gui_main_layout(plate_list):
                        tooltip="stops the program that listen to the folder for files"),
              sg.Button("Close", key="-CLOSE-", expand_x=True,
                        tooltip="Closes the whole program")],
-            [sg.DropDown(sorted(plate_list), default_value=plate_list[0], key="-BIO_PLATE_LAYOUT-", size=7),
-             sg.DropDown(sorted(analyse_method), default_value=analyse_method[0], key="-ANALYSIS_METHOD-", size=7),
+            [sg.DropDown(sorted(plate_list), default_value=plate_list[0], key="-BIO_PLATE_LAYOUT-", size=7,
+                         tooltip="The plate-layout. New once can be created in Charlie's other software and must be "
+                                 "transferred over with a USB"),
+             sg.DropDown(sorted(analyse_method), default_value=analyse_method[0], key="-ANALYSIS_METHOD-", size=7,
+                         tooltip="Analyse method. choose between different method for analysing your plates. "
+                                 "The default method is the one used for ELISA-screens"),
              sg.Text("Plates:"),
              sg.Input("", key="-PLATE_NUMBER-", size=3,
                       tooltip=tool_tip_plate_number),

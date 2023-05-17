@@ -3,7 +3,7 @@ from bio_date_handler import BIOAnalyser
 from bio_report_setup import bio_final_report_controller
 
 
-def bio_single_report(config, file, plate_layout, analysis, bio_sample_dict, all_plates_data, write_to_excel=True):
+def bio_single_report(config, file, plate_name, plate_layout, analysis, bio_sample_dict, all_plates_data, write_to_excel=True):
     """
     Analyses platereader data from a single run.
 
@@ -13,6 +13,8 @@ def bio_single_report(config, file, plate_layout, analysis, bio_sample_dict, all
     :type config: configparser.ConfigParser
     :param file: The full path to the file
     :type file: PATH
+    :param plate_name: name of the current plate
+    :type plate_name: str
     :param plate_layout: The layout for the plate with values for each well, what state they are in
     :type plate_layout: dict
     :param bio_sample_dict: None or a dict of sample ide, per plate analysed
@@ -342,7 +344,7 @@ def bio_single_report(config, file, plate_layout, analysis, bio_sample_dict, all
     }
     # needs to reformat plate-layout to use well ID instead of numbers...
     bioa = BIOAnalyser(config, bio_plate_report_setup)
-    file = txt_to_xlsx(file)
+    file = txt_to_xlsx(file, plate_name)
     all_data, well_row_col, well_type, barcode, date = original_data_dict(file, plate_layout)
 
     if not all_data:
