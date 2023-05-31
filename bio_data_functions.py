@@ -559,10 +559,9 @@ def original_data_dict(file, plate_layout):
     return all_data, well_col_row, well_type, barcode, date
 
 
-def txt_to_xlsx(file, plate_name):
+def txt_to_xlsx(file, plate_name, save_location):
 
     # get file name from the "file-path".
-    file_name = file.split(".")[0]
     # setup the excel sheet:
     wb = Workbook()
     ws = wb.active
@@ -586,9 +585,10 @@ def txt_to_xlsx(file, plate_name):
             col_index_1 += 1
 
     file_name = f"{plate_name}.xlsx"
-    wb.save(file_name)
+    file = f"{save_location}/{file_name}"
+    wb.save(file)
 
-    return file_name
+    return file
 
 if __name__ == "__main__":
 

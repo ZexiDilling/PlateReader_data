@@ -344,7 +344,7 @@ def bio_single_report(config, file, plate_name, plate_layout, analysis, bio_samp
     }
     # needs to reformat plate-layout to use well ID instead of numbers...
     bioa = BIOAnalyser(config, bio_plate_report_setup)
-    file = txt_to_xlsx(file, plate_name)
+    file = txt_to_xlsx(file, plate_name, save_location)
     all_data, well_row_col, well_type, barcode, date = original_data_dict(file, plate_layout)
 
     if not all_data:
