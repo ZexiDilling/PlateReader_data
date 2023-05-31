@@ -27,6 +27,7 @@ class MyEventHandler(FileSystemEventHandler):
         self.analysis = analysis
         self.bio_sample_dict = bio_sample_dict
         self.initial_plate = ""
+        self.plate_list = []
 
     def on_created(self, event):
         """
@@ -48,15 +49,17 @@ class MyEventHandler(FileSystemEventHandler):
                 while sending_mail:
                     # Set timer to sleep while spark is finishing writing data to the files
                     time.sleep(2)
-                    _, all_plates_data, excel_file = bio_single_report(self.config, temp_file, plate_name, self.plate_layout, self.analysis, self.bio_sample_dict,
-                                      self.all_plate_data)
+                    _, all_plates_data, excel_file = bio_single_report(self.config, temp_file, plate_name,
+                                                                       self.plate_layout, self.analysis,
+                                                                       self.bio_sample_dict, self.all_plate_data)
 
-                    msg_subject = f"Reading for plate {temp_file}"
+                    msg_subject = f"Reading for plate {plate_name}"
                     data = None
                     e_mail_type = "single_report"
 
                     # send an E-mail with information from the trans file
-                    mail_setup(msg_subject, data, self.config, e_mail_type, excel_file)
+                    mail_setup(msg_subject, data, self.config, e_mail_type, excel_file, None)
+                    self.plate_list.append(excel_file)
                     sending_mail = False
                     self.window["-PLATE_COUNTER-"].update(value=current_plate)
                     # Check plate amount. If it reach set amount,
@@ -69,7 +72,7 @@ class MyEventHandler(FileSystemEventHandler):
                         output_file = f"{output_folder}/{output_name}.xlsx"
                         time.sleep(1)
                         bio_full_report(output_file, self.analysis, all_plates_data)
-                        mail_report_sender(output_file, self.window, self.config)
+                        mail_report_sender(output_file, self.window, self.plate_list, self.config)
                         self.window["-E_MAIL_REPORT-"].update(value=False)
 
         else:
@@ -103,7 +106,6 @@ def _single_reading_body():
     :rtype: str
     """
 
-
     body = f"placeholder_text"
 
     return body
@@ -122,7 +124,7 @@ def _final_report_body():
     return body
 
 
-def mail_report_sender(filename, window, config, overview_data=None):
+def mail_report_sender(filename, window, plate_list, config, overview_data=None):
     """
     This function sends the final report of the transfer operation.
 
@@ -130,6 +132,8 @@ def mail_report_sender(filename, window, config, overview_data=None):
     :type filename: str
     :param window: The GUI window
     :type window: PySimpleGUI.PySimpleGUI.Window
+    :param plate_list: A list of all the analysed plates
+    :type plate_list: list
     :param config: The config handler, with all the default information in the config file.
     :type config: configparser.ConfigParser
 
@@ -139,11 +143,11 @@ def mail_report_sender(filename, window, config, overview_data=None):
     # sends an E-mail, with the report included
     msg_subject = f"Final report for readings: {date.today()}"
     e_mail_type = "final_report"
-    mail_setup(msg_subject, overview_data, config, e_mail_type, filename)
+    mail_setup(msg_subject, overview_data, config, e_mail_type, filename, plate_list)
     print(f"{datetime.now()} - sent final report")
 
 
-def mail_setup(msg_subject, all_data, config, e_mail_type, filename):
+def mail_setup(msg_subject, all_data, config, e_mail_type, filename, plate_list):
     """
     Sends an E-mail to user specified in the config file.
     :param msg_subject: error msg
@@ -152,6 +156,8 @@ def mail_setup(msg_subject, all_data, config, e_mail_type, filename):
     :type all_data: dict or None
     :param config: The configparser.
     :type config: configparser.ConfigParser
+    :param plate_list: A list of plates that have been analysed
+    :type plate_list: list or None
     :param e_mail_type: What kind of E-mail to send.
         "error" - sends an E-mail with all the fail transfers from the echo
         "final_report" - sends an E-mail with an overview of all the transfers, and a report for the complete transfer
@@ -194,6 +200,15 @@ def mail_setup(msg_subject, all_data, config, e_mail_type, filename):
     if file_data:
         msg.add_attachment(file_data, maintype="application", subtype=subtype, filename=filename)
     # msg.attach(MIMEText(body))
+
+    if plate_list:
+        for plates in plate_list:
+            with open(plates, 'rb') as f:
+                file_data = f.read()
+            subtype = plates.split(".")[-1]
+            filename = plates.split("/")[-1]
+
+            msg.add_attachment(file_data, maintype="application", subtype=subtype, filename=filename)
 
     # Sending the E-mail.
     server = smtplib.SMTP(dtu_server, port=25)
@@ -242,11 +257,11 @@ def listening_controller(config, run, window, plate_layout, analysis, bio_sample
 
 
 if __name__ == "__main__":
-
-    msg_subject = "testing attachment"
-    all_data = {}
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    e_mail_type = "final_report"
-
-    mail_setup(msg_subject, all_data, config, e_mail_type)
+    ...
+    # msg_subject = "testing attachment"
+    # all_data = {}
+    # config = configparser.ConfigParser()
+    # config.read("config.ini")
+    # e_mail_type = "final_report"
+    #
+    # mail_setup(msg_subject, all_data, config, e_mail_type)
