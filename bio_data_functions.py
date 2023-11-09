@@ -13,6 +13,7 @@ import time
 
 from helper_func import row_col_to_cell
 
+
 def org(all_data, well):
     """
     Original reading data from the platereader, for bio data
